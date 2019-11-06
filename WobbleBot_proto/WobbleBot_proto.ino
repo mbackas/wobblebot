@@ -1,6 +1,6 @@
 #define ENCODER_OPTIMIZE_INTERRUPTS
 #include <Encoder.h>
-#include <SPI.h>
+//#include <SPI.h>
 //#include <SD.h>
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -29,7 +29,7 @@
 # define I1 A1
 # define I0 A0
 # define ISEN A3
-const int* current[5] = {A0, A1, A2, A3, A4};
+const int* current[5] = {I0, I1, I2, I3, I4};
 
 # define EN 6
 # define PH 7
@@ -41,12 +41,10 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 const int chipSelect = 4;
 //File myFile;
 Encoder Rupert(2, 3);
-long cur_counts = 0;
-long prev_counts = 0;
 long dif_counts = 0;
 
-long ref = 0;
-long error = 0;
+double ref = 0;
+double error = 0;
 long dut = 0;
 
 unsigned long cur_time = 0;
@@ -77,6 +75,8 @@ void setup_pins() {
   pinMode(EN, OUTPUT);
   pinMode(PH, OUTPUT);
   pinMode(DECAY, OUTPUT);
+  pinMode(A4, INPUT_PULLUP);
+  pinMode(A5, INPUT_PULLUP);
 }
 
 void initialize_pins() {
@@ -100,22 +100,23 @@ void setup_timer() {
   TCCR1B = 0;// same for TCCR1B
   TCNT1  = 0;//initialize counter value to 0
   // set timer count for 1khz increments
-  OCR1A = 1999;// = (16*10^6) / (1000) - 1
+  OCR1A = 19999;// = (16*10^6) / (1000) - 1
   //had to use 16 bit timer1 for this bc 1999>255, but could switch to timers 0 or 2 with larger prescaler
   // turn on CTC mode
   TCCR1B |= (1 << WGM12);
   // Set CS01 bit for 1 prescaler
-  TCCR1B |= (1 << CS01);
+  TCCR1B |= (1 << CS11);
   // enable timer compare interrupt
   TIMSK1 |= (1 << OCIE1A);
   sei();//allow interrupts
 }
 
 void setup_orientation_sensor() {
+  /* Initialise the sensor */
   if (!bno.begin())
   {
     /* There was a problem detecting the BNO055 ... check your connections */
-    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    //        Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
     while (1);
   }
 
@@ -135,30 +136,31 @@ void setup_orientation_sensor() {
   bno.getSensor(&sensor);
   if (bnoID != sensor.sensor_id)
   {
-    Serial.println("\nNo Calibration Data for this sensor exists in EEPROM");
+    //        Serial.println("\nNo Calibration Data for this sensor exists in EEPROM");
     delay(500);
   }
   else
   {
-    Serial.println("\nFound Calibration for this sensor in EEPROM.");
+    //        Serial.println("\nFound Calibration for this sensor in EEPROM.");
     eeAddress += sizeof(long);
     EEPROM.get(eeAddress, calibrationData);
 
-    displaySensorOffsets(calibrationData);
+    //        displaySensorOffsets(calibrationData);
 
-    Serial.println("\n\nRestoring Calibration data to the BNO055...");
+    //        Serial.println("\n\nRestoring Calibration data to the BNO055...");
     bno.setSensorOffsets(calibrationData);
 
-    Serial.println("\n\nCalibration data loaded into BNO055");
+    //        Serial.println("\n\nCalibration data loaded into BNO055");
     foundCalib = true;
   }
+
   delay(1000);
 
   /* Display some basic information on this sensor */
-  displaySensorDetails();
-
-  /* Optional: Display current status */
-  displaySensorStatus();
+  //    displaySensorDetails();
+  //
+  //    /* Optional: Display current status */
+  //    displaySensorStatus();
 
   /* Crystal must be configured AFTER loading calibration data into BNO055. */
   bno.setExtCrystalUse(true);
@@ -167,29 +169,29 @@ void setup_orientation_sensor() {
   bno.getEvent(&event);
   /* always recal the mag as It goes out of calibration very often */
   if (foundCalib) {
-    Serial.println("Move sensor slightly to calibrate magnetometers");
-    //    while (!bno.isFullyCalibrated())
-    //    {
-    //      bno.getEvent(&event);
-    //      delay(BNO055_SAMPLERATE_DELAY_MS);
-    //    }
+    //        Serial.println("Move sensor slightly to calibrate magnetometers");
+    //        while (!bno.isFullyCalibrated())
+    //        {
+    //            bno.getEvent(&event);
+    //            delay(BNO055_SAMPLERATE_DELAY_MS);
+    //        }
   }
   else
   {
-    Serial.println("Please Calibrate Sensor: ");
+    //        Serial.println("Please Calibrate Sensor: ");
     while (!bno.isFullyCalibrated())
     {
       bno.getEvent(&event);
 
-      Serial.print("X: ");
-      Serial.print(event.orientation.x, 4);
-      Serial.print("\tY: ");
-      Serial.print(event.orientation.y, 4);
-      Serial.print("\tZ: ");
-      Serial.print(event.orientation.z, 4);
+      //            Serial.print("X: ");
+      //            Serial.print(event.orientation.x, 4);
+      //            Serial.print("\tY: ");
+      //            Serial.print(event.orientation.y, 4);
+      //            Serial.print("\tZ: ");
+      //            Serial.print(event.orientation.z, 4);
 
       /* Optional: Display calibration status */
-      displayCalStatus();
+      //            displayCalStatus();
 
       /* New line for the next sample */
       Serial.println("");
@@ -199,14 +201,14 @@ void setup_orientation_sensor() {
     }
   }
 
-  Serial.println("\nFully calibrated!");
-  Serial.println("--------------------------------");
-  Serial.println("Calibration Results: ");
+  //    Serial.println("\nFully calibrated!");
+  //    Serial.println("--------------------------------");
+  //    Serial.println("Calibration Results: ");
   adafruit_bno055_offsets_t newCalib;
   bno.getSensorOffsets(newCalib);
-  displaySensorOffsets(newCalib);
+  //    displaySensorOffsets(newCalib);
 
-  Serial.println("\n\nStoring calibration data to EEPROM...");
+  //    Serial.println("\n\nStoring calibration data to EEPROM...");
 
   eeAddress = 0;
   bno.getSensor(&sensor);
@@ -218,8 +220,7 @@ void setup_orientation_sensor() {
   EEPROM.put(eeAddress, newCalib);
   Serial.println("Data stored to EEPROM.");
 
-  Serial.println("\n--------------------------------\n");
-  ref = event.orientation.y;
+  //    Serial.println("\n--------------------------------\n");
   delay(500);
 }
 
@@ -249,88 +250,105 @@ void setup() {
   setup_pins();
   initialize_pins();
   setup_timer();
-  
+
   Serial.begin(115200);
   while (!Serial) {}
-  
+
   // Orientation sensor setup //
   setup_orientation_sensor();
 
-    // SD setup
+  // SD setup
   //setup_SD();
-    
+
   delay(1000);
   prev_time = micros();
   t0 = micros();
-  outputGPIO(dut);
+  //  outputGPIO(dut);
   digitalWrite(EN, LOW);
+  imu::Quaternion q = bno.getQuat();
+  ref = q.toEuler().y();
+  ref = 0.05;
 }
 
 
-int comp = 0;
-double tilt = 0;
-double tilt_dot = 0;
-long eps = 3;
-sensors_event_t event;
+int comp = 2;
+double tilt;
+double tilt_dot;
+long eps = 0;
+
+long cur_counts = 0;
+long prev_counts = 0;
+
+void collect_data() {
+  //  sensors_event_t event1;
+  imu::Quaternion q;
+  q = bno.getQuat();
+  tilt = q.toEuler().y();
+  sensors_event_t event2;
+  //  bno.getEvent(&event1);
+  bno.getEvent(&event2, Adafruit_BNO055::VECTOR_GYROSCOPE);
+  prev_time = cur_time;
+  cur_time = micros();
+  //  tilt = event1.orientation.y;
+  tilt_dot = event2.gyro.y;
+  prev_counts = cur_counts;
+  cur_counts = Rupert.read();
+  slope = 1000000.0 * (cur_counts - prev_counts) / (cur_time - prev_time);
+}
 
 void loop() {
   digitalWrite(EN, HIGH);
-  //j = number of ref changes
-  for (int j = 0; j < 10000; j++) {
-    //i = numbe of control evaluations before ref change
-    for (int i = 0; i < 2000; i++) {
-      bno.getEvent(&event);
-      while(!toggle1){}
-      prev_time = cur_time;
-      cur_time = micros();
-      
-      tilt = event.orientation.y;
-      tilt_dot = event.gyro.y;
-      prev_counts = cur_counts;
-      cur_counts = Rupert.read();
-      /* Display the floating point data */
-      display_data();
-      /* Wait the specified delay before requesting new data */
-      //delay(BNO055_SAMPLERATE_DELAY_MS);
-      controller();
-      toggle1 = false;
-    }
+  //i = numbe of control evaluations before ref change
+  for (int i = 0; i < 10000; i++) {
+    while (!toggle1) {}
+    toggle1 = false;
+    collect_data();
+    /* Display the floating point data */
+    //display_data();
+    controller(i);
+    Serial.print(tilt,4);
+//    Serial.print(",");
+//    Serial.print(0.05*tilt_dot);
+//    Serial.print(",");
+//    Serial.print(dut);
+//    Serial.print(slope);
+    ////    Serial.print(",");
+    ////    Serial.print(cur_counts);
+    ////    Serial.print(cur_time-prev_time);
+    Serial.println("");
   }
   digitalWrite(EN, LOW);
   while (1);
 }
 
-void controller(){
-  //      dut = max(-31 + comp, min(31 - comp, 10.0 * error - 1.5 * slope));
-      
-      if(error>eps) dut = 10;
-      else if(error<-eps) dut = -10;
-      else dut = 0;
-      
-      if (slope > -1) {
-        dut += comp;
-      }
-      else if (slope < 1) {
-        dut -= comp;
-      }
-      if (dut < -0) {
-        digitalWrite(PH, LOW);
-      }
-      else if (dut > 0) {
-        digitalWrite(PH, HIGH);
-      }
-      //if (i % 10 == 0)Serial.println(slope);
-      output = String(cur_time) + "," + String(cur_counts * factor) + "," + String(slope * factor, 4);
-      outputGPIO(abs(dut));
+double error_dot = 0;
+
+void controller(int i) {
+  double kp = 50.5 ;
+  double kd = 0.04;
+  error = (ref - tilt);
+  error_dot = 0 - tilt_dot;
+  //62.5, 0.1, .005
+  dut = max(-4 + comp, min(4 - comp, kp * error + kd * error_dot + 0.00 * cur_counts - 0.000*slope));
+
+  if (slope > 0) {
+    dut += comp;
+  }
+  else if (slope < 0) {
+    dut -= comp;
+  }
+  //if (i % 10 == 0)Serial.println(slope);
+  output = String(cur_time) + "," + String(cur_counts * factor) + "," + String(slope * factor, 4);
+  outputGPIO(dut);
 }
 
-void display_data(){
-  Serial.print("X: ");
-  Serial.print(event.orientation.x, 4);
-  Serial.print("\tY: ");
-  Serial.println(error);
-  Serial.print("\tZ: ");
-  Serial.print(event.orientation.z, 4);
+void display_data() {
+  //  Serial.print("X: ");
+  //  Serial.print(event1.orientation.x, 4);
+  //  Serial.print("\tY: ");
+  //  Serial.println(error);
+  //  Serial.print("\tZ: ");
+  //  Serial.print(event1.orientation.z, 4);
 
   /* Optional: Display calibration status */
   displayCalStatus();
@@ -344,14 +362,15 @@ void display_data(){
 
 ISR(TIMER1_COMPA_vect) { //timer1 interrupt 1Hz toggles pin 13 (LED)
   //generates pulse wave of frequency 1Hz/2 = 0.5kHz (takes two cycles for full wave- toggle high then toggle low)
-  if (!toggle1) {
-    digitalWrite(13, HIGH);
-    toggle1 = 1;
-  }
-  else {
-    digitalWrite(13, LOW);
-    toggle1 = 1;
-  }
+  //  if (!toggle1) {
+  //    //digitalWrite(13, HIGH);
+  //    toggle1 = true;
+  //  }
+  //  else {
+  //    //digitalWrite(13, LOW);
+  //    toggle1 = true;
+  //  }
+  toggle1 = true;
 }
 
 //void read_SD(){
@@ -373,7 +392,14 @@ ISR(TIMER1_COMPA_vect) { //timer1 interrupt 1Hz toggles pin 13 (LED)
 //        Serial.println("error opening datalog.txt");
 //     }
 //}
-void outputGPIO(unsigned int level) {
+void outputGPIO(long level) {
+  if (level < 0) {
+    digitalWrite(PH, LOW);
+  }
+  else if (level > 0) {
+    digitalWrite(PH, HIGH);
+  }
+  level = abs(level);
   unsigned int mask = 1;
   for (int k = 0; k < 5; k++) {
     if (mask & level) {
@@ -444,6 +470,7 @@ void displaySensorStatus(void)
   Serial.println("");
   delay(500);
 }
+
 void displayCalStatus(void)
 {
   /* Get the four calibration values (0..3) */
