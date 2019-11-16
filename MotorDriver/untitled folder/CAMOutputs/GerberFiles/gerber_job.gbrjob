@@ -1,0 +1,24 @@
+{
+    "Header": {
+        "Comment": "All values are metric (mm)",
+        "CreationDate": "2019-09-23T08:26:26Z",
+        "GenerationSoftware": {
+            "Application": "EAGLE",
+            "Vendor": "Autodesk",
+            "Version": "9.5.0"
+        },
+        "Part": "Single"
+    },
+    "Overall": {
+        "BoardThickness": 1.57,
+        "LayerNumber": 2,
+        "Name": {
+            "ProjectId": "motor driver auto"
+        },
+        "Owner": "Marc Backas <marc.backas@gmail.com>",
+        "Size": {
+            "X": 34.29,
+            "Y": 24.765
+        }
+    }
+}

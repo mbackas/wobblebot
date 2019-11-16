@@ -1,0 +1,13 @@
+"Qty";"Value";"Device";"Package";"Parts";"Description";"MANUFACTURER_PART_NUMBER";"POPULARITY";"SPICEPREFIX";"VENDOR";
+"2";"";"PINHD-1X8";"1X08";"JP1, JP2";"PIN HEADER";"";"67";"";"";
+"2";".1u";"C-US025-024X044";"C025-024X044";"C1, C4";"CAPACITOR, American symbol";"";"17";"C";"";
+"1";".47u";"C-US025-024X044";"C025-024X044";"C6";"CAPACITOR, American symbol";"";"17";"C";"";
+"1";"0.1u";"C-USC0805";"C0805";"C5";"CAPACITOR, American symbol";"";"63";"C";"";
+"1";"0.47u";"C-USC0805";"C0805";"C2";"CAPACITOR, American symbol";"";"63";"C";"";
+"1";"100m";"R-US_R2512";"R2512";"CSR2512C0R1F";"RESISTOR, American symbol";"";"0";"R";"";
+"1";"100u";"CPOL-USE2.5-6";"E2,5-6";"C3";"POLARIZED CAPACITOR, American symbol";"";"14";"C";"";
+"1";"10k";"R-US_0204/2V";"0204V";"R5";"RESISTOR, American symbol";"";"0";"R";"";
+"1";"1M";"R-US_0204/2V";"0204V";"R1";"RESISTOR, American symbol";"";"0";"R";"";
+"1";"2.5k";"R-US_0207/10";"0207/10";"R3";"RESISTOR, American symbol";"";"36";"R";"";
+"1";"7.5k";"R-US_0207/10";"0207/10";"R2";"RESISTOR, American symbol";"";"36";"R";"";
+"1";"DRV8840PWPR";"DRV8840PWPR";"PWP28_5P18X3P1";"U1";"";"DRV8840PWPR";"";"";"Texas Instruments";
