@@ -1,0 +1,24 @@
+{
+    "Header": {
+        "Comment": "All values are metric (mm)",
+        "CreationDate": "2019-11-16T09:39:20Z",
+        "GenerationSoftware": {
+            "Application": "EAGLE",
+            "Vendor": "Autodesk",
+            "Version": "9.5.1"
+        },
+        "Part": "Single"
+    },
+    "Overall": {
+        "BoardThickness": 1.57,
+        "LayerNumber": 2,
+        "Name": {
+            "ProjectId": "Wobblebot-AT328P-board"
+        },
+        "Owner": "Marc Backas <marc.backas@gmail.com>",
+        "Size": {
+            "X": 69.85,
+            "Y": 50.74
+        }
+    }
+}
