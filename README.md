@@ -1,3 +1,2 @@
 # wobblebot
-![GitHub Logo](/images/logo.png)
-Format: ![Alt Text](url)
+![WobbleBot](/resize_wobbleBot.jpg)
