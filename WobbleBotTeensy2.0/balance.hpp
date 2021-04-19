@@ -34,7 +34,11 @@ class System {
     double controller(const vector<double>& ref);
     void driveMotor(int in, double speed);
     void setGains(vector<double> gainz);
+    void changeIthGain(int idx, double gn);
+    void resetSensors();
     const vector<double>& updateEnc(void);
+    void printInfo();
+
   private:
     unsigned long period;
     unsigned long prevTime;

@@ -11,13 +11,22 @@ void System::setGains(vector<double> gainz) {
   gains = gainz;
 }
 
+void System::changeIthGain(int idx, double gn){
+  gains[idx] = gn;
+}
+
 double System::controller(const vector<double>& ref) {
   double result = 0;
-  for (int k = 1; k < state.size(); k++) {
-    result += (ref[k - 1] - state[k]) * gains[k - 1];
-  }
+//  for (int k = 1; k < state.size(); k++) {
+//    result += (ref[k - 1] - state[k]) * gains[k - 1];
+//  }
+//                  u = -Kx   K = 4350, 652, 126, -210                      
+//  result = -gains[0]*1.03*(0.16/1.03+state[1]) + -gains[1]*state[2] + (gains[0]*0.03-gains[2])*state[3] + -gains[3]*state[4];
+  result = -gains[0]*(0.155+state[1]) + -gains[1]*state[2] + gains[2]*(gains[4]+state[3]) + gains[3]*state[4];
+
   return result;
 }
+
 void System::begin() {
   gains = {0, 0, 0, 0};
   state = vector<double>(8, 0.0);
@@ -34,10 +43,12 @@ void System::setup_pins() {
   pinMode(PH, OUTPUT);
   pinMode(21, INPUT);
 }
+
 void System::initialize_pins() {
   digitalWrite(PH, HIGH);
   digitalWrite(EN, LOW);
 }
+
 void System::setup_orientation_sensor() {
   /* Initialise the sensor */
   if (!bno.begin())
@@ -164,10 +175,10 @@ double prevGyro = 0.0;
 
 vector<double> System::readSensors() {
   sensors_event_t event2;
+  curTime = micros();
   imu::Quaternion q = bno.getQuat();
   bno.getEvent(&event2, Adafruit_BNO055::VECTOR_GYROSCOPE);
-  curTime = micros();
-  gyro = event2.gyro.z*0.01745329251;
+  gyro = event2.gyro.z * 0.01745329251; // pi/180
   double tilt = q.toEuler().y();
 
   //  Serial.print(gyro,5);
@@ -176,8 +187,7 @@ vector<double> System::readSensors() {
 
   state[0] = curTime;
   state[1] = tilt;
-  //
-  //
+  state[2] = gyro;
   return state;
 }
 
@@ -189,7 +199,7 @@ const int static_fric_low = -2000;
 
 void System::driveMotor(int in, double spd) {
   int num = 0;
-//  in=1;
+  //  in=1;
   unsigned int dut = 256;
   bool phs = true;
   if (abs(spd) < 0.001) {
@@ -212,7 +222,7 @@ void System::driveMotor(int in, double spd) {
     num = kin_fric_low;
     dut = 256;
   }
-  if(abs(state[4])>11.0)dut=150;
+  if (abs(state[4]) > 11.0)dut = 150;
   num += in;
   //  num = in;
   if (num > 0)phs = true;
@@ -314,28 +324,29 @@ MoBo::Filter TFil(TAPS_ENC);
 
 const vector<double>& System::updateEnc(void) {
   curTime = micros();
-  double cnts = Garry.read()*0.0106150666099;
-  double countsFilt = CFil.filter(cnts);
+
+  double cnts = Garry.read() * 0.0106150666099; // now cnts is in radians of rotation around the cylinder, just like tilt
+  double countsFilt = CFil.filter(cnts); // FIR filter quantization noise from encoder signal
   double spd = 1000000.0 * (countsFilt - prevCountsFilt) / (curTime - prevTimeENC);
 
   double gyroFilt = GFil.filter(gyro);
-//  double tiltFilt = TFil.filter(state[1]);
-//  double accel = 1000000.0 * (gyroFilt - prevGyro) / (curTime - prevTimeENC);
+  //  double tiltFilt = TFil.filter(state[1]);
+  //  double accel = 1000000.0 * (gyroFilt - prevGyro) / (curTime - prevTimeENC);
   prevGyro = gyroFilt;
-  double trans = -0.000404434038 * countsFilt + 0.085725 * state[1];
-  double trans_dot = -0.000404434038 * spd + 0.085725 * gyroFilt;
+  prevCounts = cnts;
+  prevCountsFilt = countsFilt;
+  //  double trans = -0.000404434038 * countsFilt + 0.085725 * state[1];
+  //  double trans_dot = -0.000404434038 * spd + 0.085725 * gyroFilt;
 
   state[0] = curTime;
 //  state[1] = tilt;
-  state[2] = gyro;
+//  state[2] = gyro;
   state[3] = cnts;
   state[4] = spd;
-//  state[5] = accel;
-  state[6] = trans;
-  state[7] = trans_dot;
+  //  state[5] = accel;
+  //  state[6] = trans;
+  //  state[7] = trans_dot;
   
-  prevCounts = cnts;
-  prevCountsFilt = countsFilt;
   return state;
 }
 
@@ -348,4 +359,10 @@ int System::waitENC() {
   }
   digitalWrite(13, LOW);
   return count;
+}
+
+void System::resetSensors(){
+  state=vector<double>(8,0.0);
+  Garry.readAndReset();
+  Serial.print('R');
 }

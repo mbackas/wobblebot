@@ -16,7 +16,7 @@ double Filter::filter(double in) {
 //    Serial.print(elem);
 //    Serial.print(",");
 //  }
-  for (int i = 0; i < NTAPS; i++) {
+  for (unsigned i = 0; i < NTAPS; i++) {
 //        Serial.println((NTAPS + idx - i) % NTAPS);
 //Serial.print(String(taps[0])+",");
 //        Serial.println(inBuf[idx]);
@@ -24,7 +24,6 @@ double Filter::filter(double in) {
     filt = taps[i];
     out += filt*elem;
   }
-//  Serial.println();
   idx = (idx + 1) % NTAPS;
   return out;
 }
